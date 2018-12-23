@@ -1,7 +1,8 @@
 /**
+ * Author: Maximilian Fickers
+ * Date:   18.12.2018
  *
- *
- *
+ * Library of time-related functions.
  **/
 
 #include <stdio.h>
