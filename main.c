@@ -22,7 +22,7 @@
  * 0 for valid years
  * -1 for invalid years
  **/
-int is_valid_year (int year)
+int is_valid_year(int year)
 {
     if (year < GREGORIAN_CALENDAR || year > YEAR_UPPER_BOUND) {
         return -1;
@@ -72,32 +72,19 @@ int get_days_for_month(int month, int year)
     // day to February for leap years and returning -1 for
     // invalid months.
     switch (month) {
-        // January
-        case 1: return LONG_MONTH;
-        // February
-        case 2: return FEBRUARY + is_leapyear(year);
-        // March
-        case 3: return LONG_MONTH;
-        // April
-        case 4: return SHORT_MONTH;
-        // May
-        case 5: return LONG_MONTH;
-        // June
-        case 6: return SHORT_MONTH;
-        // July
-        case 7: return LONG_MONTH;
-        // August
-        case 8: return LONG_MONTH;
-        // September
-        case 9: return SHORT_MONTH;
-        // October
-        case 10: return LONG_MONTH;
-        // November
-        case 11: return SHORT_MONTH;
-        // December
-        case 12: return LONG_MONTH;
-        // Invalid month
-        default: return -1;
+        case 1: return LONG_MONTH;                   // January
+        case 2: return FEBRUARY + is_leapyear(year); // February
+        case 3: return LONG_MONTH;                   // March
+        case 4: return SHORT_MONTH;                  // April
+        case 5: return LONG_MONTH;                   // May
+        case 6: return SHORT_MONTH;                  // June
+        case 7: return LONG_MONTH;                   // July
+        case 8: return LONG_MONTH;                   // August
+        case 9: return SHORT_MONTH;                  // September
+        case 10: return LONG_MONTH;                  // October
+        case 11: return SHORT_MONTH;                 // November
+        case 12: return LONG_MONTH;                  // December
+        default: return -1;                          // Invalid month
     }
 }
 
@@ -108,12 +95,45 @@ int get_days_for_month(int month, int year)
  **/
 int day_of_the_year(int day, int month, int year)
 {
+    // Ignore current month in loop
+    month--;
     // Add the days of past months to the current day.
-    while (month > 1) {
+    while (month > 0) {
         day += get_days_for_month(month--, year);
     }
 
     return day;
+}
+
+/**
+ * Calculates the weekday of January 1st for a given
+ * year, using  a modified version of Gauss's algorithm.
+ *
+ * Returns:
+ * 1  for Monday
+ * ...
+ * 7  for Sunday.
+ **/
+int new_years_day(int year)
+{
+    return ((1 + 5 * ((year - 1) % 4) + 4 * ((year - 1) % 100) + 6 * ((year - 1) % 400)) % 7 + 6) % 7 + 1;
+}
+
+/**
+ * Calculates the weekday of a given date.
+ *
+ * Returns:
+ * 1  for Monday
+ * ...
+ * 7  for Sunday.
+ **/
+int day_of_the_week(int day, int month, int year)
+{
+    int nyd = new_years_day(year); // Weekday of new year's day.
+    int past_days = day_of_the_year(day, month, year) - 1; // Past days of this year.
+    
+    // Calculate weekday in the correct format.
+    return (nyd + past_days - 1) % 7 + 1;
 }
 
 /**
@@ -146,43 +166,57 @@ int exists_date(int day, int month, int year)
 /**
  * Gets a valid date from console input.
  *
- * TODO: VALIDATION AND DOCUMENTATION
+ * TODO: Input validation.
  **/
 void input_date (int *day, int *month, int *year)
 {
-    char date[10];
+    char date[11];
     int tmp_day = 0, tmp_month = 0, tmp_year = 0;
 
+    // Repeat prompt until input is a valid date.
     do {
         printf("Bitte geben Sie ein Datum ein (dd.mm.yyyy):");
         scanf("%s", date);
 
+        // Cut input string by adding null characters after each segment.
         date[2] = '\0';
         tmp_day = atoi(&date[0]);
         date[5] = '\0';
         tmp_month = atoi(&date[3]);
         date[10] = '\0';
-        tmp_month = atoi(&date[6]);
-    } while (exists_date(tmp_day, tmp_month, tmp_year));
+        tmp_year = atoi(&date[6]);
+    } while (!exists_date(tmp_day, tmp_month, tmp_year));
 
     // Save the valid date to the given pointers.
-    day = tmp_day;
-    month = tmp_month;
-    year = tmp_year;
+    *day = tmp_day;
+    *month = tmp_month;
+    *year = tmp_year;
 
     return;
 }
 
 /**
- * Start
+ * Start here.
  **/
 int main()
 {
-    int day = 0, month = 0, year = 0;
+    int day = 26, month = 2, year = 1994;
 
     input_date(&day, &month, &year);
 
     printf("Tag des Jahres: %i\n", day_of_the_year(day, month, year));
-    printf("Validierung: %i\n", exists_date(day, month, year));
+    
+    char *weekday;
+    switch (day_of_the_week(day, month, year)) {
+        case 1: weekday = "Montag"; break;
+        case 2: weekday = "Dienstag"; break;
+        case 3: weekday = "Mittwoch"; break;
+        case 4: weekday = "Donnerstag"; break;
+        case 5: weekday = "Freitag"; break;
+        case 6: weekday = "Samstag"; break;
+        case 7: weekday = "Sonntag"; break;
+    }
+    printf("Wochentag: %s\n", weekday);
+    
     return 0;
 }
