@@ -137,6 +137,23 @@ int day_of_the_week(int day, int month, int year)
 }
 
 /**
+ * Returns the number of the week in the corresponding year based on ISO 8601.
+ **/
+int week_number(int day, int month, int year)
+{
+    int offset = 0; // Offset between Monday of week 1 and new year's day.
+    
+    // First week is the one with the first Thursday of the year.
+    if (new_years_day(year) <= 4) {
+        // First week starts in current year => negative or no offset.
+        offset = - 1;
+    }
+    
+    
+    return 1;
+}
+
+/**
  * Validates a given date (day, month, year)
  *
  * Returns:
