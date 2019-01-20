@@ -5,7 +5,8 @@
  * Date:   15.01.2019
  **/
 
- #include <stdio.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 #define GREGORIAN_CALENDAR 1582
 #define YEAR_UPPER_BOUND 2400
@@ -203,8 +204,6 @@ int exists_date(int day, int month, int year)
 
 /**
  * Gets a valid date from console input.
- *
- * TODO: Input validation.
  **/
 void input_date (int *day, int *month, int *year)
 {
