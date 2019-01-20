@@ -131,7 +131,7 @@ int day_of_the_week(int day, int month, int year)
 {
     int nyd = new_years_day(year); // Weekday of new year's day.
     int past_days = day_of_the_year(day, month, year) - 1; // Past days of this year.
-    
+
     // Calculate weekday in the correct format.
     return (nyd + past_days - 1) % 7 + 1;
 }
@@ -141,16 +141,40 @@ int day_of_the_week(int day, int month, int year)
  **/
 int week_number(int day, int month, int year)
 {
-    int offset = 0; // Offset between Monday of week 1 and new year's day.
-    
+    // Start of first week can go back up to 29th of December.
+    // This calculation will work up to the upper limit of years.
+    if (month == 12 && day >= 29) {
+        int days_to_new_year = 31 - day;
+
+        // Current week is first of next year when Thursday is after 31st.
+        if (day_of_the_week(day, month, year) <= (3 - days_to_new_year)) {
+            return 1;
+        }
+    }
+
+    int offset_nyd = 0; // Offset between Monday of week 1 and new year's day.
+
     // First week is the one with the first Thursday of the year.
     if (new_years_day(year) <= 4) {
         // First week starts in current year => negative or no offset.
-        offset = - 1;
+        offset_nyd = 1 - new_years_day(year);
+    } else {
+        // First week starts past New Year's Day => positive offset.
+        offset_nyd = 8 - new_years_day(year);
     }
-    
-    
-    return 1;
+
+    // Calculate offset to Monday of first week of current year.
+    int offset_first_week = day_of_the_year(day, month, year) - offset_nyd - 1;
+
+    printf("Offset to first week %i\n", offset_first_week);
+
+    if (offset_first_week >= 0) {
+        // Monday of first week is before or on the current day.
+        return (offset_first_week / 7) + 1;
+    } else {
+        // Monday of first week is after the current day.
+        return 53;
+    }
 }
 
 /**
@@ -177,7 +201,7 @@ int exists_date(int day, int month, int year)
         return 0;
     }
 
-    return 1;
+    return -1;
 }
 
 /**
@@ -222,7 +246,7 @@ int main()
     input_date(&day, &month, &year);
 
     printf("Tag des Jahres: %i\n", day_of_the_year(day, month, year));
-    
+
     char *weekday;
     switch (day_of_the_week(day, month, year)) {
         case 1: weekday = "Montag"; break;
@@ -234,6 +258,8 @@ int main()
         case 7: weekday = "Sonntag"; break;
     }
     printf("Wochentag: %s\n", weekday);
-    
+
+    printf("Kalenderwoche: %i\n", week_number(day, month, year));
+
     return 0;
 }
