@@ -7,6 +7,8 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <ctype.h>
+#include <string.h>
 
 #define GREGORIAN_CALENDAR 1582
 #define YEAR_UPPER_BOUND 2400
@@ -22,7 +24,7 @@
  * 0 for valid years
  * -1 for invalid years
  **/
-int is_valid_year(int year)
+int _is_valid_year(int year)
 {
     if (year < GREGORIAN_CALENDAR || year > YEAR_UPPER_BOUND) {
         return -1;
@@ -64,7 +66,7 @@ int is_leapyear(int year)
 int get_days_for_month(int month, int year)
 {
     // Validate year
-    if (is_valid_year(year) == -1) {
+    if (_is_valid_year(year) == -1) {
         return -1;
     }
 
@@ -185,7 +187,7 @@ int week_number(int day, int month, int year)
 int exists_date(int day, int month, int year)
 {
     // Validate year
-    if (is_valid_year(year) == -1) {
+    if (_is_valid_year(year) == -1) {
         return 0;
     }
 
@@ -207,21 +209,37 @@ int exists_date(int day, int month, int year)
  **/
 void input_date (int *day, int *month, int *year)
 {
-    char date[11];
-    int tmp_day = 0, tmp_month = 0, tmp_year = 0;
+    const int DATE_LENGTH = 11;
+
+    char date[DATE_LENGTH];
+    int tmp_day, tmp_month, tmp_year;
 
     // Repeat prompt until input is a valid date.
     do {
+        tmp_day = 0, tmp_month = 0, tmp_year = 0;
+
         printf("Bitte geben Sie ein Datum ein (dd.mm.yyyy):");
         scanf("%s", date);
 
-        // Cut input string by adding null characters after each segment.
-        date[2] = '\0';
-        tmp_day = atoi(&date[0]);
-        date[5] = '\0';
-        tmp_month = atoi(&date[3]);
-        date[10] = '\0';
-        tmp_year = atoi(&date[6]);
+        // Cut string at delimiter.
+        for (int i = 0; i < DATE_LENGTH; i++) {
+            if (isdigit(date[i])) {
+                continue;
+            } else if (date[i] == '.') {
+                // Delimiter found, replace with NULL-Terminator
+                date[i] = '\0';
+            } else {
+                // Invalid character.
+                break;
+            }
+        }
+
+        int offset = 0;
+        tmp_day = atoi(&date[offset]);
+        offset += strlen(&date[offset]) + 1;
+        tmp_month = atoi(&date[offset]);
+        offset += strlen(&date[offset]) + 1;
+        tmp_year = atoi(&date[offset]);
     } while (!exists_date(tmp_day, tmp_month, tmp_year));
 
     // Save the valid date to the given pointers.
