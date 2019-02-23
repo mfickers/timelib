@@ -9,6 +9,7 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include <string.h>
+#include "time.h"
 
 #define GREGORIAN_CALENDAR 1582
 #define YEAR_UPPER_BOUND 2400
@@ -95,13 +96,15 @@ int get_days_for_month(int month, int year)
  * the total number of days passed for that year
  * including the given day.
  **/
-int day_of_the_year(int day, int month, int year)
+int day_of_the_year(struct date date)
 {
+    int month = date.month, day = date.day;
+
     // Ignore current month in loop
     month--;
     // Add the days of past months to the current day.
     while (month > 0) {
-        day += get_days_for_month(month--, year);
+        day += get_days_for_month(month--, date.year);
     }
 
     return day;
@@ -119,6 +122,7 @@ int day_of_the_year(int day, int month, int year)
 int new_years_day(int year)
 {
     return ((1 + 5 * ((year - 1) % 4) + 4 * ((year - 1) % 100) + 6 * ((year - 1) % 400)) % 7 + 6) % 7 + 1;
+
 }
 
 /**
@@ -129,10 +133,10 @@ int new_years_day(int year)
  * ...
  * 7  for Sunday.
  **/
-int day_of_the_week(int day, int month, int year)
+int day_of_the_week(struct date date)
 {
-    int nyd = new_years_day(year); // Weekday of new year's day.
-    int past_days = day_of_the_year(day, month, year) - 1; // Past days of this year.
+    int nyd = new_years_day(date.year); // Weekday of new year's day.
+    int past_days = day_of_the_year(date) - 1; // Past days of this year.
 
     // Calculate weekday in the correct format.
     return (nyd + past_days - 1) % 7 + 1;
@@ -141,15 +145,15 @@ int day_of_the_week(int day, int month, int year)
 /**
  * Returns the number of the week in the corresponding year based on ISO 8601.
  **/
-int week_number(int day, int month, int year)
+int week_number(struct date date)
 {
     // Start of first week can go back up to 29th of December.
     // This calculation will work up to the upper limit of years.
-    if (month == 12 && day >= 29) {
-        int days_to_new_year = 31 - day;
+    if (date.month == 12 && date.day >= 29) {
+        int days_to_new_year = 31 - date.day;
 
         // Current week is first of next year when Thursday is after 31st.
-        if (day_of_the_week(day, month, year) <= (3 - days_to_new_year)) {
+        if (day_of_the_week(date) <= (3 - days_to_new_year)) {
             return 1;
         }
     }
@@ -157,16 +161,16 @@ int week_number(int day, int month, int year)
     int offset_nyd = 0; // Offset between Monday of week 1 and new year's day.
 
     // First week is the one with the first Thursday of the year.
-    if (new_years_day(year) <= 4) {
+    if (new_years_day(date.year) <= 4) {
         // First week starts in current year => negative or no offset.
-        offset_nyd = 1 - new_years_day(year);
+        offset_nyd = 1 - new_years_day(date.year);
     } else {
         // First week starts past New Year's Day => positive offset.
-        offset_nyd = 8 - new_years_day(year);
+        offset_nyd = 8 - new_years_day(date.year);
     }
 
     // Calculate offset to Monday of first week of current year.
-    int offset_first_week = day_of_the_year(day, month, year) - offset_nyd - 1;
+    int offset_first_week = day_of_the_year(date) - offset_nyd - 1;
 
     if (offset_first_week >= 0) {
         // Monday of first week is before or on the current day.
@@ -184,20 +188,20 @@ int week_number(int day, int month, int year)
  * 1  for valid dates.
  * 0  for invalid dates.
  **/
-int exists_date(int day, int month, int year)
+int exists_date(struct date date)
 {
     // Validate year
-    if (_is_valid_year(year) == -1) {
+    if (_is_valid_year(date.year) == -1) {
         return 0;
     }
 
     // Validate month
-    if (month < 1 || month > 12) {
+    if (date.month < 1 || date.month > 12) {
         return 0;
     }
 
     // Validate day
-    if (day < 1 || day > get_days_for_month(month, year)) {
+    if (date.day < 1 || date.day > get_days_for_month(date.month, date.year)) {
         return 0;
     }
 
@@ -207,27 +211,27 @@ int exists_date(int day, int month, int year)
 /**
  * Gets a valid date from console input.
  **/
-void input_date (int *day, int *month, int *year)
+void input_date (struct date *date)
 {
     const int DATE_LENGTH = 11;
 
-    char date[DATE_LENGTH];
-    int tmp_day, tmp_month, tmp_year;
+    char input[DATE_LENGTH];
+    struct date tmp;
 
     // Repeat prompt until input is a valid date.
     do {
-        tmp_day = 0, tmp_month = 0, tmp_year = 0;
+        tmp.day = 0, tmp.month = 0, tmp.year = 0;
 
         printf("Bitte geben Sie ein Datum ein (dd.mm.yyyy):");
-        scanf("%s", date);
+        scanf("%s", input);
 
         // Cut string at delimiter.
         for (int i = 0; i < DATE_LENGTH; i++) {
-            if (isdigit(date[i])) {
+            if (isdigit(input[i])) {
                 continue;
-            } else if (date[i] == '.') {
+            } else if (input[i] == '.') {
                 // Delimiter found, replace with NULL-Terminator
-                date[i] = '\0';
+                input[i] = '\0';
             } else {
                 // Invalid character.
                 break;
@@ -235,17 +239,18 @@ void input_date (int *day, int *month, int *year)
         }
 
         int offset = 0;
-        tmp_day = atoi(&date[offset]);
-        offset += strlen(&date[offset]) + 1;
-        tmp_month = atoi(&date[offset]);
-        offset += strlen(&date[offset]) + 1;
-        tmp_year = atoi(&date[offset]);
-    } while (!exists_date(tmp_day, tmp_month, tmp_year));
+        tmp.day = atoi(&input[offset]);
+        offset += strlen(&input[offset]) + 1;
+        tmp.month = atoi(&input[offset]);
+        offset += strlen(&input[offset]) + 1;
+        tmp.year = atoi(&input[offset]);
 
-    // Save the valid date to the given pointers.
-    *day = tmp_day;
-    *month = tmp_month;
-    *year = tmp_year;
+    } while (!exists_date(tmp));
+
+    // Save the valid date to the given struct pointer.
+    date->day = tmp.day;
+    date->month = tmp.month;
+    date->year = tmp.year;
 
     return;
 }

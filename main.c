@@ -15,14 +15,16 @@
  **/
 int main()
 {
-    int day = 26, month = 2, year = 1994;
+    struct date date;
 
-    input_date(&day, &month, &year);
+    input_date(&date);
 
-    printf("\nTag des Jahres: %i\n", day_of_the_year(day, month, year));
+    printf("\nDatum: %i.%i.%i\n", date.day, date.month, date.year);
+
+    printf("Tag des Jahres: %i\n", day_of_the_year(date));
 
     char *weekday;
-    switch (day_of_the_week(day, month, year)) {
+    switch (day_of_the_week(date)) {
         case 1: weekday = "Montag"; break;
         case 2: weekday = "Dienstag"; break;
         case 3: weekday = "Mittwoch"; break;
@@ -33,7 +35,7 @@ int main()
     }
     printf("Wochentag: %s\n", weekday);
 
-    printf("Kalenderwoche: %i\n", week_number(day, month, year));
+    printf("Kalenderwoche: %i\n", week_number(date));
 
     return 0;
 }
