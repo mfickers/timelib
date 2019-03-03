@@ -1,2 +1,2 @@
 # timelib
-Initial repository for a time library written in C.
+Library of time related functions written in C.

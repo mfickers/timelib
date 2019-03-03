@@ -1,3 +1,10 @@
+/**
+ * Library of time-related functions
+ *
+ * Author: Maximilian Fickers
+ * Date:   26.02.2019
+ **/
+
 #ifndef TIME_H_INCLUDED
 #define TIME_H_INCLUDED
 
